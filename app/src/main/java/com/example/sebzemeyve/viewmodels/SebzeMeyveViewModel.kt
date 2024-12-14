@@ -8,6 +8,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil.compose.AsyncImage
@@ -21,6 +23,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 class SebzeMeyveViewModel : ViewModel() {
     private val _sebzeMeyveFiyatlar = mutableStateOf<List<HalFiyat>>(emptyList())
     val sebzeMeyveFiyatlar: State<List<HalFiyat>> = _sebzeMeyveFiyatlar
+    val errorMessage = mutableStateOf("")
 
     private val apiService = Retrofit.Builder()
         .baseUrl("https://openapi.izmir.bel.tr/")
@@ -28,23 +31,26 @@ class SebzeMeyveViewModel : ViewModel() {
         .build()
         .create(ApiService::class.java)
 
-    fun getSebzeMeyveFiyatlar(date: String) {
+    fun getSebzeMeyveFiyatlar(date: String, onResult: (Boolean) -> Unit = {}) {
         viewModelScope.launch {
             try {
                 val response = apiService.getSebzeMeyveFiyatlar(date)
-                _sebzeMeyveFiyatlar.value = response.HalFiyatListesi
+                if (response.HalFiyatListesi.isEmpty()) {
+                    setErrorMessage("Bu tarihe ait veriler bulunamadı.")
+                    onResult(false)
+                } else {
+                    _sebzeMeyveFiyatlar.value = response.HalFiyatListesi
+                    setErrorMessage("")
+                    onResult(true)
+                }
             } catch (e: Exception) {
+                setErrorMessage("Veriler getirilirken bir hata oluştu: ${e.localizedMessage}")
+                onResult(false)
             }
         }
     }
 
-    @Composable
-    fun GorselGoster(imageUrl: String) {
-        AsyncImage(
-            model = imageUrl,
-            contentDescription = "Ürün Görseli",
-            modifier = Modifier.size(120.dp).padding(8.dp),
-            contentScale = ContentScale.Crop
-        )
+    fun setErrorMessage(message: String) {
+        errorMessage.value = message
     }
 }
