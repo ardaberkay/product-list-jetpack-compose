@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -29,6 +30,7 @@ import com.example.sebzemeyve.models.HalFiyat
 import com.example.sebzemeyve.ui.theme.BackgroundColor
 import com.example.sebzemeyve.ui.theme.InteractionColor
 import com.example.sebzemeyve.viewmodels.SebzeMeyveViewModel
+import com.example.sebzemeyve.views.components.SebzeMeyveListesi
 import com.example.sebzemeyve.views.components.TarihInput
 
 @Composable
@@ -43,11 +45,10 @@ fun SebzeMeyveScreen(viewModel: SebzeMeyveViewModel = viewModel()) {
         sebzeMeyveFiyatlar.filter { it.MalAdi.contains(searchQuery, ignoreCase = true) }
     }
 
-    Column(modifier = Modifier.padding(top = 65.dp, start = 16.dp, end = 16.dp)) {
+    Column(modifier = Modifier.padding(top = 65.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)) {
 
-
-
-        Row(modifier = Modifier.fillMaxWidth(),
+        Row(
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceAround,
         ) {
@@ -56,15 +57,15 @@ fun SebzeMeyveScreen(viewModel: SebzeMeyveViewModel = viewModel()) {
                 onClick = {
                     if (inputTarih.isEmpty()) {
                         viewModel.setErrorMessage("Hangi Tarihin Pazar Fiyatlarını Görmek İstiyorsunuz?")
-                    } else{
-                        viewModel.getSebzeMeyveFiyatlar(inputTarih){
-                            success ->
-                                if (!success){
-                                    viewModel.setErrorMessage("Lütfen Geçerli Bir Tarih Giriniz.")
+                    } else {
+                        viewModel.getSebzeMeyveFiyatlar(inputTarih) { success ->
+                            if (!success) {
+                                viewModel.setErrorMessage("Lütfen Geçerli Bir Tarih Giriniz.")
                             }
                         }
                     }
-                }, colors = ButtonDefaults.elevatedButtonColors(
+                },
+                colors = ButtonDefaults.elevatedButtonColors(
                     containerColor = InteractionColor,
                     contentColor = BackgroundColor
                 ),
@@ -73,48 +74,25 @@ fun SebzeMeyveScreen(viewModel: SebzeMeyveViewModel = viewModel()) {
             }
         }
 
-        if (errorMessage.isNotEmpty()) {
-            Text(
-                text = errorMessage,
-                color = Color.Red,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-        }
+        Column(modifier = Modifier.padding(top = 25.dp, bottom = 25.dp)) {
+            if (errorMessage.isNotEmpty()) {
+                Text(
+                    text = errorMessage,
+                    color = Color.Red,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
 
-        if (sebzeMeyveFiyatlar.isNotEmpty()) {
-            SearchBar(
-                searchQuery = searchQuery,
-                onQueryChanged = { searchQuery = it }
-            )
-            SebzeMeyveListesi(filteredSebzeMeyveFiyatlar)
-        }
-    }
-}
-
-@Composable
-fun SebzeMeyveListesi(sebzeMeyveFiyatlar: List<HalFiyat>) {
-    val baseImageUrl = "https://www.bizizmir.com/YuklenenDosyalar/Hal/"
-    LazyColumn {
-        items(sebzeMeyveFiyatlar) { halFiyat ->
-            Row {
-            val imageUrl = baseImageUrl + halFiyat.Gorsel
-            GorselGoster(imageUrl)
-            SebzeMeyveItem(halFiyat = halFiyat)
+            if (sebzeMeyveFiyatlar.isNotEmpty()) {
+                SearchBar(
+                    searchQuery = searchQuery,
+                    onQueryChanged = { searchQuery = it },
+                )
+                SebzeMeyveListesi(filteredSebzeMeyveFiyatlar)
             }
         }
-    }
-}
 
-@Composable
-fun GorselGoster(imageUrl: String) {
-    AsyncImage(
-        model = imageUrl,
-        contentDescription = "Ürün Görseli",
-        modifier = Modifier
-            .size(120.dp)
-            .padding(8.dp),
-        contentScale = ContentScale.Crop
-    )
+    }
 }
 
 

@@ -8,5 +8,4 @@ interface ApiService {
 
     @GET("api/ibb/halfiyatlari/sebzemeyve/{date}")
     suspend fun getSebzeMeyveFiyatlar(@Path("date") date: String): SebzeMeyveResponse
-
 }
